@@ -26,10 +26,12 @@ function toIsoDate(d: Date): string {
 export function computeNextWaterDate(
   lastWateredDate: string | null,
   frequencyDays: number,
-  postponedDaysAfter: number
+  postponedDaysAfter: number,
+  createdAt?: Date
 ): string | null {
-  if (!lastWateredDate) return null;
-  const base = new Date(lastWateredDate + "T00:00:00Z");
+  const baseDate = lastWateredDate ?? (createdAt ? toIsoDate(createdAt) : null);
+  if (!baseDate) return null;
+  const base = new Date(baseDate + "T00:00:00Z");
   base.setUTCDate(base.getUTCDate() + frequencyDays + postponedDaysAfter);
   return toIsoDate(base);
 }
@@ -65,7 +67,7 @@ async function computePlant(plant: typeof plantsTable.$inferSelect): Promise<Com
     ).length;
   }
 
-  const nextWaterDate = computeNextWaterDate(lastWateredDate, plant.frequencyDays, postponedAfterWatered);
+  const nextWaterDate = computeNextWaterDate(lastWateredDate, plant.frequencyDays, postponedAfterWatered, plant.createdAt);
 
   // Determine state
   const todayLog = logs.find((l) => l.logDate === today);
