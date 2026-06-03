@@ -3,13 +3,21 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: PetPlants API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: plants
+    description: Plant operations
+  - name: log
+    description: Watering log operations
+  - name: stats
+    description: Player stats operations
+  - name: dashboard
+    description: Dashboard operations
 paths:
   /healthz:
     get:
@@ -24,6 +32,189 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /plants:
+    get:
+      operationId: getPlants
+      tags: [plants]
+      summary: Get all plants
+      description: Returns all plants with computed next-water date and current emotional state
+      responses:
+        "200":
+          description: List of plants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Plant"
+    post:
+      operationId: createPlant
+      tags: [plants]
+      summary: Add a plant
+      description: Creates a new plant profile and awards 10 XP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlantInput"
+      responses:
+        "201":
+          description: Plant created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlantCreatedResult"
+
+  /plants/{id}:
+    get:
+      operationId: getPlant
+      tags: [plants]
+      summary: Get a plant by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Plant detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Plant"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updatePlant
+      tags: [plants]
+      summary: Update a plant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlantUpdate"
+      responses:
+        "200":
+          description: Updated plant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Plant"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deletePlant
+      tags: [plants]
+      summary: Delete a plant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /plants/{id}/history:
+    get:
+      operationId: getPlantHistory
+      tags: [plants]
+      summary: Get 10-day watering history for a plant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: 10-day history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HistoryEntry"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /log:
+    post:
+      operationId: logWatering
+      tags: [log]
+      summary: Log a watering action
+      description: Log watered or postponed status for a plant, returns XP awarded
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WateringLogInput"
+      responses:
+        "200":
+          description: Log result with XP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WateringLogResult"
+
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [dashboard]
+      summary: Get dashboard data
+      description: Returns all plants with today summary and player stats
+      responses:
+        "200":
+          description: Dashboard data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dashboard"
+
+  /stats:
+    get:
+      operationId: getStats
+      tags: [stats]
+      summary: Get player stats
+      description: Returns player XP, level, and streak info
+      responses:
+        "200":
+          description: Player stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlayerStats"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +225,215 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    EmoticonStyle:
+      type: string
+      enum: [leafy, succulent, flower, herb]
+
+    PlantState:
+      type: string
+      enum: [happy, thirsty, resting, postponed]
+
+    Plant:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        species:
+          type: ["string", "null"]
+        frequencyDays:
+          type: integer
+        waterAmount:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        emoticonStyle:
+          $ref: "#/components/schemas/EmoticonStyle"
+        createdAt:
+          type: string
+        nextWaterDate:
+          type: ["string", "null"]
+        lastWateredDate:
+          type: ["string", "null"]
+        state:
+          $ref: "#/components/schemas/PlantState"
+        dueToday:
+          type: boolean
+        totalXp:
+          type: integer
+      required:
+        - id
+        - name
+        - frequencyDays
+        - emoticonStyle
+        - createdAt
+        - state
+        - dueToday
+        - totalXp
+
+    PlantInput:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        species:
+          type: string
+        frequencyDays:
+          type: integer
+          minimum: 1
+        waterAmount:
+          type: string
+        notes:
+          type: string
+        emoticonStyle:
+          $ref: "#/components/schemas/EmoticonStyle"
+      required:
+        - name
+        - frequencyDays
+
+    PlantUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        species:
+          type: string
+        frequencyDays:
+          type: integer
+          minimum: 1
+        waterAmount:
+          type: string
+        notes:
+          type: string
+        emoticonStyle:
+          $ref: "#/components/schemas/EmoticonStyle"
+
+    PlantCreatedResult:
+      type: object
+      properties:
+        plant:
+          $ref: "#/components/schemas/Plant"
+        xpAwarded:
+          type: integer
+        stats:
+          $ref: "#/components/schemas/PlayerStats"
+      required:
+        - plant
+        - xpAwarded
+        - stats
+
+    WateringLogInput:
+      type: object
+      properties:
+        plantId:
+          type: integer
+        status:
+          type: string
+          enum: [watered, postponed]
+        logDate:
+          type: string
+          description: ISO date string YYYY-MM-DD
+      required:
+        - plantId
+        - status
+
+    WateringLogResult:
+      type: object
+      properties:
+        xpAwarded:
+          type: integer
+        stats:
+          $ref: "#/components/schemas/PlayerStats"
+        plant:
+          $ref: "#/components/schemas/Plant"
+        streakBonus:
+          type: integer
+        leveledUp:
+          type: boolean
+      required:
+        - xpAwarded
+        - stats
+        - plant
+        - streakBonus
+        - leveledUp
+
+    HistoryEntry:
+      type: object
+      properties:
+        date:
+          type: string
+        status:
+          type: ["string", "null"]
+          enum: [watered, postponed, missed, null]
+        xpAwarded:
+          type: ["integer", "null"]
+        notes:
+          type: ["string", "null"]
+      required:
+        - date
+
+    PlayerStats:
+      type: object
+      properties:
+        totalXp:
+          type: integer
+        currentLevel:
+          type: integer
+        levelTitle:
+          type: string
+        currentStreak:
+          type: integer
+        longestStreak:
+          type: integer
+        xpToNextLevel:
+          type: ["integer", "null"]
+        xpForCurrentLevel:
+          type: integer
+      required:
+        - totalXp
+        - currentLevel
+        - levelTitle
+        - currentStreak
+        - longestStreak
+        - xpForCurrentLevel
+
+    TodaySummary:
+      type: object
+      properties:
+        plantsDueCount:
+          type: integer
+        plantsWateredToday:
+          type: integer
+        totalPlants:
+          type: integer
+      required:
+        - plantsDueCount
+        - plantsWateredToday
+        - totalPlants
+
+    Dashboard:
+      type: object
+      properties:
+        plants:
+          type: array
+          items:
+            $ref: "#/components/schemas/Plant"
+        summary:
+          $ref: "#/components/schemas/TodaySummary"
+        stats:
+          $ref: "#/components/schemas/PlayerStats"
+      required:
+        - plants
+        - summary
+        - stats

@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "PetPlants"
+version = "1.0.0"
+id = "artifacts/petplants"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24649
+
+[services.development]
+run = "pnpm --filter @workspace/petplants run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/petplants", "run", "build" ]
+publicDir = "artifacts/petplants/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24649"
+BASE_PATH = "/"
