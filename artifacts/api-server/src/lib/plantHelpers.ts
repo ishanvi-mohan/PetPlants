@@ -29,9 +29,11 @@ export function computeNextWaterDate(
   postponedDaysAfter: number,
   createdAt?: Date
 ): string | null {
-  const baseDate = lastWateredDate ?? (createdAt ? toIsoDate(createdAt) : null);
-  if (!baseDate) return null;
-  const base = new Date(baseDate + "T00:00:00Z");
+  // Never been watered — due on the day it was added
+  if (!lastWateredDate) {
+    return createdAt ? toIsoDate(createdAt) : null;
+  }
+  const base = new Date(lastWateredDate + "T00:00:00Z");
   base.setUTCDate(base.getUTCDate() + frequencyDays + postponedDaysAfter);
   return toIsoDate(base);
 }
