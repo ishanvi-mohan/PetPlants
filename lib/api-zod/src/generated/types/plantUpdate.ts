@@ -15,5 +15,6 @@ export interface PlantUpdate {
   frequencyDays?: number;
   waterAmount?: string;
   notes?: string;
+  location?: string;
   emoticonStyle?: EmoticonStyle;
 }

@@ -28,6 +28,7 @@ export const GetPlantsResponseItem = zod.object({
   "frequencyDays": zod.number(),
   "waterAmount": zod.string().nullish(),
   "notes": zod.string().nullish(),
+  "location": zod.string().nullish(),
   "emoticonStyle": zod.enum(['leafy', 'succulent', 'flower', 'herb']),
   "createdAt": zod.string(),
   "nextWaterDate": zod.string().nullish(),
@@ -53,6 +54,7 @@ export const CreatePlantBody = zod.object({
   "frequencyDays": zod.number().min(1),
   "waterAmount": zod.string().optional(),
   "notes": zod.string().optional(),
+  "location": zod.string().optional(),
   "emoticonStyle": zod.enum(['leafy', 'succulent', 'flower', 'herb']).optional()
 })
 
@@ -71,6 +73,7 @@ export const GetPlantResponse = zod.object({
   "frequencyDays": zod.number(),
   "waterAmount": zod.string().nullish(),
   "notes": zod.string().nullish(),
+  "location": zod.string().nullish(),
   "emoticonStyle": zod.enum(['leafy', 'succulent', 'flower', 'herb']),
   "createdAt": zod.string(),
   "nextWaterDate": zod.string().nullish(),
@@ -98,6 +101,7 @@ export const UpdatePlantBody = zod.object({
   "frequencyDays": zod.number().min(1).optional(),
   "waterAmount": zod.string().optional(),
   "notes": zod.string().optional(),
+  "location": zod.string().optional(),
   "emoticonStyle": zod.enum(['leafy', 'succulent', 'flower', 'herb']).optional()
 })
 
@@ -108,6 +112,7 @@ export const UpdatePlantResponse = zod.object({
   "frequencyDays": zod.number(),
   "waterAmount": zod.string().nullish(),
   "notes": zod.string().nullish(),
+  "location": zod.string().nullish(),
   "emoticonStyle": zod.enum(['leafy', 'succulent', 'flower', 'herb']),
   "createdAt": zod.string(),
   "nextWaterDate": zod.string().nullish(),
@@ -170,6 +175,7 @@ export const LogWateringResponse = zod.object({
   "frequencyDays": zod.number(),
   "waterAmount": zod.string().nullish(),
   "notes": zod.string().nullish(),
+  "location": zod.string().nullish(),
   "emoticonStyle": zod.enum(['leafy', 'succulent', 'flower', 'herb']),
   "createdAt": zod.string(),
   "nextWaterDate": zod.string().nullish(),
@@ -195,6 +201,7 @@ export const GetDashboardResponse = zod.object({
   "frequencyDays": zod.number(),
   "waterAmount": zod.string().nullish(),
   "notes": zod.string().nullish(),
+  "location": zod.string().nullish(),
   "emoticonStyle": zod.enum(['leafy', 'succulent', 'flower', 'herb']),
   "createdAt": zod.string(),
   "nextWaterDate": zod.string().nullish(),

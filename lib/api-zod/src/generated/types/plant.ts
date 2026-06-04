@@ -18,6 +18,8 @@ export interface Plant {
   waterAmount?: string | null;
   /** @nullable */
   notes?: string | null;
+  /** @nullable */
+  location?: string | null;
   emoticonStyle: EmoticonStyle;
   createdAt: string;
   /** @nullable */

@@ -9,6 +9,7 @@ export const plantsTable = pgTable("plants", {
   frequencyDays: integer("frequency_days").notNull(),
   waterAmount: text("water_amount"),
   notes: text("notes"),
+  location: text("location"),
   emoticonStyle: text("emoticon_style").notNull().default("leafy"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

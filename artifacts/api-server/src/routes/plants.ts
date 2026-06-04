@@ -30,7 +30,7 @@ router.post("/plants", async (req, res): Promise<void> => {
     return;
   }
 
-  const { name, species, frequencyDays, waterAmount, notes, emoticonStyle } = parsed.data;
+  const { name, species, frequencyDays, waterAmount, notes, location, emoticonStyle } = parsed.data;
 
   const [plant] = await db
     .insert(plantsTable)
@@ -40,6 +40,7 @@ router.post("/plants", async (req, res): Promise<void> => {
       frequencyDays,
       waterAmount: waterAmount ?? null,
       notes: notes ?? null,
+      location: location ?? null,
       emoticonStyle: emoticonStyle ?? "leafy",
     })
     .returning();
@@ -108,6 +109,7 @@ router.put("/plants/:id", async (req, res): Promise<void> => {
   if (parsed.data.frequencyDays !== undefined) updateData.frequencyDays = parsed.data.frequencyDays;
   if (parsed.data.waterAmount !== undefined) updateData.waterAmount = parsed.data.waterAmount;
   if (parsed.data.notes !== undefined) updateData.notes = parsed.data.notes;
+  if (parsed.data.location !== undefined) updateData.location = parsed.data.location;
   if (parsed.data.emoticonStyle !== undefined) updateData.emoticonStyle = parsed.data.emoticonStyle;
 
   const [updated] = await db
@@ -162,7 +164,7 @@ router.get("/plants/:id/history", async (req, res): Promise<void> => {
     return;
   }
 
-  const history = await getPlantHistory(params.data.id);
+  const history = await getPlantHistory(params.data.id, plant);
   res.json(history);
 });
 

@@ -119,6 +119,16 @@ export default function PlantProfile() {
         )}
       </div>
 
+      {plant.location && (
+        <div className="pixel-card p-4 flex items-center gap-3">
+          <div className="text-[#6bcbff]" style={{ fontSize: 20 }}>⌂</div>
+          <div>
+            <h3 className="font-heading text-[10px] text-[#556080] mb-1">LOCATION</h3>
+            <p className="font-sans text-lg text-[#e8f4f8]">{plant.location}</p>
+          </div>
+        </div>
+      )}
+
       {plant.notes && (
         <div className="pixel-card p-4">
           <h3 className="font-heading text-[10px] text-[#556080] mb-2">NOTES</h3>

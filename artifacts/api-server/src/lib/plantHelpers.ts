@@ -10,6 +10,7 @@ export interface ComputedPlant {
   frequencyDays: number;
   waterAmount: string | null;
   notes: string | null;
+  location: string | null;
   emoticonStyle: string;
   createdAt: string;
   nextWaterDate: string | null;
@@ -110,6 +111,7 @@ async function computePlant(plant: typeof plantsTable.$inferSelect): Promise<Com
     frequencyDays: plant.frequencyDays,
     waterAmount: plant.waterAmount ?? null,
     notes: plant.notes ?? null,
+    location: plant.location ?? null,
     emoticonStyle: plant.emoticonStyle,
     createdAt: plant.createdAt.toISOString(),
     nextWaterDate,
@@ -125,33 +127,69 @@ export async function getAllComputedPlants(): Promise<ComputedPlant[]> {
   return Promise.all(plants.map(computePlant));
 }
 
-export async function getPlantHistory(plantId: number): Promise<Array<{
+export async function getPlantHistory(
+  plantId: number,
+  plant: typeof plantsTable.$inferSelect
+): Promise<Array<{
   date: string;
   status: string | null;
   xpAwarded: number | null;
   notes: string | null;
 }>> {
-  const today = new Date();
+  const todayStr = toIsoDate(new Date());
+
+  // Fetch all logs for this plant (entire history, for schedule replay)
+  const allLogs = await db
+    .select()
+    .from(wateringLogTable)
+    .where(eq(wateringLogTable.plantId, plantId))
+    .orderBy(wateringLogTable.logDate);
+
   const results = [];
 
   for (let i = 9; i >= 0; i--) {
-    const d = new Date(today);
+    const d = new Date(todayStr + "T00:00:00Z");
     d.setUTCDate(d.getUTCDate() - i);
     const dateStr = toIsoDate(d);
 
-    const [logEntry] = await db
-      .select()
-      .from(wateringLogTable)
-      .where(
-        and(
-          eq(wateringLogTable.plantId, plantId),
-          eq(wateringLogTable.logDate, dateStr)
-        )
-      );
+    const logEntry = allLogs.find((l) => l.logDate === dateStr);
+
+    let status: string | null = logEntry?.status ?? null;
+
+    // For past days with no log entry, check if the plant was due (= missed)
+    if (!status && dateStr < todayStr) {
+      const logsUpToDay = allLogs.filter((l) => l.logDate <= dateStr);
+      const lastWatered = [...logsUpToDay].reverse().find((l) => l.status === "watered");
+      const lastWateredDate = lastWatered?.logDate ?? null;
+
+      const relevantPostpones = lastWateredDate
+        ? logsUpToDay.filter((l) => l.status === "postponed" && l.logDate > lastWateredDate)
+        : logsUpToDay.filter((l) => l.status === "postponed");
+      const latestPostpone = relevantPostpones.length > 0
+        ? relevantPostpones.reduce((a, b) => (a.logDate >= b.logDate ? a : b))
+        : null;
+
+      let dueDateAsOf: string | null;
+      if (latestPostpone) {
+        const base = new Date(latestPostpone.logDate + "T00:00:00Z");
+        base.setUTCDate(base.getUTCDate() + 1);
+        dueDateAsOf = toIsoDate(base);
+      } else if (lastWateredDate) {
+        const base = new Date(lastWateredDate + "T00:00:00Z");
+        base.setUTCDate(base.getUTCDate() + plant.frequencyDays);
+        dueDateAsOf = toIsoDate(base);
+      } else {
+        dueDateAsOf = toIsoDate(plant.createdAt);
+      }
+
+      if (dueDateAsOf !== null && dueDateAsOf <= dateStr) {
+        status = "missed";
+      }
+    }
 
     results.push({
       date: dateStr,
-      status: logEntry?.status ?? null,
+      status,
       xpAwarded: logEntry?.xpAwarded ?? null,
       notes: logEntry?.notes ?? null,
     });

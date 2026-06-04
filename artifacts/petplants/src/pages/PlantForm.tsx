@@ -17,6 +17,7 @@ const formSchema = z.object({
   species: z.string().optional(),
   frequencyDays: z.coerce.number().min(1, "Must be at least 1 day"),
   waterAmount: z.string().optional(),
+  location: z.string().optional(),
   notes: z.string().optional(),
   emoticonStyle: z.enum(["leafy", "succulent", "flower", "herb"] as const),
 });
@@ -41,6 +42,7 @@ export default function PlantForm() {
       species: "",
       frequencyDays: 7,
       waterAmount: "",
+      location: "",
       notes: "",
       emoticonStyle: "leafy",
     },
@@ -53,6 +55,7 @@ export default function PlantForm() {
         species: existingPlant.species || "",
         frequencyDays: existingPlant.frequencyDays,
         waterAmount: existingPlant.waterAmount || "",
+        location: existingPlant.location || "",
         notes: existingPlant.notes || "",
         emoticonStyle: existingPlant.emoticonStyle,
       });
@@ -198,6 +201,20 @@ export default function PlantForm() {
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="location"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-heading text-[10px] text-[#556080]">LOCATION IN HOUSE</FormLabel>
+                  <FormControl>
+                    <Input {...field} className="pixel-input text-lg font-sans" placeholder="e.g. Living room windowsill" />
+                  </FormControl>
+                  <FormMessage className="text-[#ff6b9d] font-sans text-sm" />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}

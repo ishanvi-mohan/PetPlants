@@ -256,6 +256,8 @@ components:
           type: ["string", "null"]
         notes:
           type: ["string", "null"]
+        location:
+          type: ["string", "null"]
         emoticonStyle:
           $ref: "#/components/schemas/EmoticonStyle"
         createdAt:
@@ -295,6 +297,8 @@ components:
           type: string
         notes:
           type: string
+        location:
+          type: string
         emoticonStyle:
           $ref: "#/components/schemas/EmoticonStyle"
       required:
@@ -315,6 +319,8 @@ components:
         waterAmount:
           type: string
         notes:
+          type: string
+        location:
           type: string
         emoticonStyle:
           $ref: "#/components/schemas/EmoticonStyle"

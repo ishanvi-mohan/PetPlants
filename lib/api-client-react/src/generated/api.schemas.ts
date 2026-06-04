@@ -43,6 +43,8 @@ export interface Plant {
   waterAmount?: string | null;
   /** @nullable */
   notes?: string | null;
+  /** @nullable */
+  location?: string | null;
   emoticonStyle: EmoticonStyle;
   createdAt: string;
   /** @nullable */
@@ -62,6 +64,7 @@ export interface PlantInput {
   frequencyDays: number;
   waterAmount?: string;
   notes?: string;
+  location?: string;
   emoticonStyle?: EmoticonStyle;
 }
 
@@ -73,6 +76,7 @@ export interface PlantUpdate {
   frequencyDays?: number;
   waterAmount?: string;
   notes?: string;
+  location?: string;
   emoticonStyle?: EmoticonStyle;
 }
 
