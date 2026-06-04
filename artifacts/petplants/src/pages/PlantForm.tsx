@@ -126,11 +126,6 @@ export default function PlantForm() {
                             background: "#0d2e1f",
                           } : {}}
                         >
-                          {selected && (
-                            <div className="absolute top-1 right-1 w-3 h-3 bg-[#00ff87] flex items-center justify-center" style={{ fontSize: 8, lineHeight: 1 }}>
-                              <span style={{ color: "#0d0d1a", fontFamily: "sans-serif", fontWeight: "bold", fontSize: 9 }}>✓</span>
-                            </div>
-                          )}
                           <PlantEmoticon style={style} state="happy" size={48} />
                           <span className="font-heading mt-1" style={{ fontSize: 7, color: selected ? "#00ff87" : "#556080" }}>
                             {style.toUpperCase()}
