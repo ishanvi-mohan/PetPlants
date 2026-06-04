@@ -35,7 +35,6 @@ export default function HistoryBar({ entries = [], compact = true }: HistoryBarP
     switch (status) {
       case "watered": return "#00ff87";
       case "missed": return "#ffd166";
-      case "postponed": return "#6bcbff";
       default: return "#2a2a4a";
     }
   };

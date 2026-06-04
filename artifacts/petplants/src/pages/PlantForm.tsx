@@ -113,15 +113,31 @@ export default function PlantForm() {
                 <FormLabel className="font-heading text-[10px] text-[#556080]">CHOOSE AVATAR</FormLabel>
                 <FormControl>
                   <div className="flex justify-between gap-2">
-                    {emoticonOptions.map(style => (
-                      <div 
-                        key={style}
-                        onClick={() => field.onChange(style)}
-                        className={`pixel-card flex-1 flex justify-center p-2 cursor-pointer transition-colors ${field.value === style ? 'border-[#00ff87] bg-[#20203a]' : ''}`}
-                      >
-                        <PlantEmoticon style={style} state="happy" size={48} />
-                      </div>
-                    ))}
+                    {emoticonOptions.map(style => {
+                      const selected = field.value === style;
+                      return (
+                        <div
+                          key={style}
+                          onClick={() => field.onChange(style)}
+                          className="pixel-card flex-1 flex flex-col items-center justify-center p-2 cursor-pointer transition-all relative"
+                          style={selected ? {
+                            borderColor: "#00ff87",
+                            boxShadow: "0 0 0 2px #00ff87, 0 0 12px #00ff87",
+                            background: "#0d2e1f",
+                          } : {}}
+                        >
+                          {selected && (
+                            <div className="absolute top-1 right-1 w-3 h-3 bg-[#00ff87] flex items-center justify-center" style={{ fontSize: 8, lineHeight: 1 }}>
+                              <span style={{ color: "#0d0d1a", fontFamily: "sans-serif", fontWeight: "bold", fontSize: 9 }}>✓</span>
+                            </div>
+                          )}
+                          <PlantEmoticon style={style} state="happy" size={48} />
+                          <span className="font-heading mt-1" style={{ fontSize: 7, color: selected ? "#00ff87" : "#556080" }}>
+                            {style.toUpperCase()}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </FormControl>
                 <FormMessage className="text-[#ff6b9d] font-sans" />

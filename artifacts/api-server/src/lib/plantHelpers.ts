@@ -26,18 +26,14 @@ function toIsoDate(d: Date): string {
 export function computeNextWaterDate(
   lastWateredDate: string | null,
   frequencyDays: number,
-  postponedDaysAfter: number,
   createdAt?: Date
 ): string | null {
-  // Never been watered — due on the day it was added, shifted by any skips
   if (!lastWateredDate) {
-    if (!createdAt) return null;
-    const base = new Date(toIsoDate(createdAt) + "T00:00:00Z");
-    base.setUTCDate(base.getUTCDate() + postponedDaysAfter);
-    return toIsoDate(base);
+    // Never been watered — due on the day it was added
+    return createdAt ? toIsoDate(createdAt) : null;
   }
   const base = new Date(lastWateredDate + "T00:00:00Z");
-  base.setUTCDate(base.getUTCDate() + frequencyDays + postponedDaysAfter);
+  base.setUTCDate(base.getUTCDate() + frequencyDays);
   return toIsoDate(base);
 }
 
@@ -64,17 +60,23 @@ async function computePlant(plant: typeof plantsTable.$inferSelect): Promise<Com
   const lastWateredEntry = logs.find((l) => l.status === "watered");
   const lastWateredDate = lastWateredEntry?.logDate ?? null;
 
-  // Count postponed entries logged AFTER the last watered date (or all of them if never watered)
-  let postponedAfterWatered = 0;
-  if (lastWateredDate) {
-    postponedAfterWatered = logs.filter(
-      (l) => l.status === "postponed" && l.logDate > lastWateredDate
-    ).length;
-  } else {
-    postponedAfterWatered = logs.filter((l) => l.status === "postponed").length;
-  }
+  // Find the most recent postponed entry after the last watered date (or any postpone if never watered)
+  const relevantPostpones = lastWateredDate
+    ? logs.filter((l) => l.status === "postponed" && l.logDate > lastWateredDate)
+    : logs.filter((l) => l.status === "postponed");
+  const latestPostpone = relevantPostpones.length > 0
+    ? relevantPostpones.reduce((a, b) => (a.logDate >= b.logDate ? a : b))
+    : null;
 
-  const nextWaterDate = computeNextWaterDate(lastWateredDate, plant.frequencyDays, postponedAfterWatered, plant.createdAt);
+  let nextWaterDate: string | null;
+  if (latestPostpone) {
+    // Skip shifts next date to the day after the most recent skip
+    const base = new Date(latestPostpone.logDate + "T00:00:00Z");
+    base.setUTCDate(base.getUTCDate() + 1);
+    nextWaterDate = toIsoDate(base);
+  } else {
+    nextWaterDate = computeNextWaterDate(lastWateredDate, plant.frequencyDays, plant.createdAt);
+  }
 
   // Determine state
   const todayLog = logs.find((l) => l.logDate === today);
