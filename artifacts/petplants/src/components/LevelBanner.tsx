@@ -9,11 +9,11 @@ interface LevelBannerProps {
 export default function LevelBanner({ stats }: LevelBannerProps) {
   const { currentLevel, levelTitle, totalXp, xpForCurrentLevel, xpToNextLevel } = stats;
   
-  const currentLevelBaseXp = totalXp - xpForCurrentLevel;
-  const targetXp = xpToNextLevel ? totalXp + xpToNextLevel : totalXp;
-  
-  const progressPercent = xpToNextLevel 
-    ? Math.min(100, Math.max(0, (xpForCurrentLevel / (xpForCurrentLevel + xpToNextLevel)) * 100))
+  const xpIntoLevel = totalXp - xpForCurrentLevel;
+  const xpNeededForLevel = xpToNextLevel ? xpToNextLevel - xpForCurrentLevel : 1;
+
+  const progressPercent = xpToNextLevel
+    ? Math.min(100, Math.max(0, (xpIntoLevel / xpNeededForLevel) * 100))
     : 100;
 
   return (
@@ -34,7 +34,7 @@ export default function LevelBanner({ stats }: LevelBannerProps) {
         </div>
         <div className="flex justify-end mt-1">
           <span className="font-sans text-sm text-[#556080]">
-            {totalXp} {xpToNextLevel ? `/ ${targetXp} XP` : 'XP Maxed'}
+            {totalXp} {xpToNextLevel ? `/ ${xpToNextLevel} XP` : "XP Maxed"}
           </span>
         </div>
       </div>
