@@ -1,0 +1,31 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="96" fill="#0d0d1a"/>
+  <!-- pot body -->
+  <rect x="176" y="352" width="160" height="96" rx="0" fill="#8b5e3c"/>
+  <!-- pot rim -->
+  <rect x="160" y="336" width="192" height="24" rx="0" fill="#a0714f"/>
+  <!-- soil -->
+  <rect x="176" y="352" width="160" height="20" fill="#3a2010"/>
+  <!-- stem -->
+  <rect x="240" y="208" width="32" height="128" fill="#3a7d44"/>
+  <!-- main leaf left -->
+  <rect x="144" y="192" width="96" height="32" fill="#00c853"/>
+  <rect x="128" y="160" width="80" height="32" fill="#00c853"/>
+  <rect x="144" y="128" width="64" height="32" fill="#00c853"/>
+  <!-- main leaf right -->
+  <rect x="272" y="192" width="96" height="32" fill="#00c853"/>
+  <rect x="304" y="160" width="80" height="32" fill="#00c853"/>
+  <rect x="304" y="128" width="64" height="32" fill="#00c853"/>
+  <!-- top leaves -->
+  <rect x="208" y="160" width="96" height="32" fill="#00e676"/>
+  <rect x="224" y="128" width="64" height="32" fill="#00e676"/>
+  <rect x="240" y="96" width="32" height="32" fill="#00e676"/>
+  <!-- leaf shine -->
+  <rect x="160" y="192" width="16" height="16" fill="#69f0ae" opacity="0.5"/>
+  <rect x="336" y="192" width="16" height="16" fill="#69f0ae" opacity="0.5"/>
+  <rect x="224" y="128" width="16" height="16" fill="#69f0ae" opacity="0.5"/>
+  <!-- sparkles -->
+  <rect x="128" y="112" width="8" height="8" fill="#ffcc00"/>
+  <rect x="368" y="128" width="8" height="8" fill="#ffcc00"/>
+  <rect x="256" y="64" width="8" height="8" fill="#ffcc00"/>
+</svg>
