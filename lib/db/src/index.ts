@@ -10,15 +10,12 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-// Parse URL manually so pg receives the decoded password directly
-// (avoids issues with special chars in URL-encoded passwords)
-const dbUrl = new URL(process.env.DATABASE_URL);
+// Let pg parse the connection string. pg's parser (pg-connection-string)
+// correctly percent-decodes the username and password. The WHATWG `URL`
+// getters do NOT decode them, so manual parsing passed the still-encoded
+// password to pg and the pooler rejected it ("Tenant or user not found").
 export const pool = new Pool({
-  host: dbUrl.hostname,
-  port: dbUrl.port ? parseInt(dbUrl.port) : 5432,
-  user: decodeURIComponent(dbUrl.username),
-  password: decodeURIComponent(dbUrl.password),
-  database: dbUrl.pathname.replace(/^\//, ""),
+  connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
 });
 export const db = drizzle(pool, { schema });
