@@ -2,11 +2,18 @@ import { Router, type IRouter } from "express";
 import { db, playerStatsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { getLevelInfo } from "../lib/xp";
+import { getGardenContext } from "../lib/gardenContext";
 
 const router: IRouter = Router();
 
-router.get("/stats", async (_req, res): Promise<void> => {
-  const [stats] = await db.select().from(playerStatsTable).where(eq(playerStatsTable.id, 1));
+router.get("/stats", async (req, res): Promise<void> => {
+  const ctx = getGardenContext(req, res);
+  if (!ctx) return;
+
+  const [stats] = await db
+    .select()
+    .from(playerStatsTable)
+    .where(eq(playerStatsTable.memberId, ctx.memberId));
 
   if (!stats) {
     res.json({

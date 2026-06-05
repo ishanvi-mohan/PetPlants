@@ -38,11 +38,11 @@ export function computeNextWaterDate(
   return toIsoDate(base);
 }
 
-export async function getComputedPlant(plantId: number): Promise<ComputedPlant | null> {
-  const [plant] = await db
-    .select()
-    .from(plantsTable)
-    .where(eq(plantsTable.id, plantId));
+export async function getComputedPlant(plantId: number, gardenId?: string): Promise<ComputedPlant | null> {
+  const conditions = gardenId
+    ? and(eq(plantsTable.id, plantId), eq(plantsTable.gardenId, gardenId))
+    : eq(plantsTable.id, plantId);
+  const [plant] = await db.select().from(plantsTable).where(conditions);
   if (!plant) return null;
   return computePlant(plant);
 }
@@ -122,8 +122,12 @@ async function computePlant(plant: typeof plantsTable.$inferSelect): Promise<Com
   };
 }
 
-export async function getAllComputedPlants(): Promise<ComputedPlant[]> {
-  const plants = await db.select().from(plantsTable).orderBy(plantsTable.createdAt);
+export async function getAllComputedPlants(gardenId: string): Promise<ComputedPlant[]> {
+  const plants = await db
+    .select()
+    .from(plantsTable)
+    .where(eq(plantsTable.gardenId, gardenId))
+    .orderBy(plantsTable.createdAt);
   return Promise.all(plants.map(computePlant));
 }
 

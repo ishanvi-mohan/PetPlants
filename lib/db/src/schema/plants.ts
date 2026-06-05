@@ -1,9 +1,11 @@
 import { pgTable, text, serial, integer, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+import { gardensTable } from "./gardens";
 
 export const plantsTable = pgTable("plants", {
   id: serial("id").primaryKey(),
+  gardenId: text("garden_id").notNull().references(() => gardensTable.id),
   name: text("name").notNull(),
   species: text("species"),
   frequencyDays: integer("frequency_days").notNull(),

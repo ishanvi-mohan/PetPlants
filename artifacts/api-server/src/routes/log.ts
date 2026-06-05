@@ -4,6 +4,7 @@ import { eq, desc, and } from "drizzle-orm";
 import { LogWateringBody } from "@workspace/api-zod";
 import { getComputedPlant } from "../lib/plantHelpers";
 import { calcWateringXp, getLevelInfo, XP_POSTPONE, XP_STREAK_3, XP_STREAK_7 } from "../lib/xp";
+import { getGardenContext } from "../lib/gardenContext";
 
 const router: IRouter = Router();
 
@@ -12,6 +13,9 @@ function toIsoDate(d: Date): string {
 }
 
 router.post("/log", async (req, res): Promise<void> => {
+  const ctx = getGardenContext(req, res);
+  if (!ctx) return;
+
   const parsed = LogWateringBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -21,19 +25,20 @@ router.post("/log", async (req, res): Promise<void> => {
   const { plantId, status, logDate } = parsed.data;
   const today = logDate ?? toIsoDate(new Date());
 
-  // Check plant exists
   const [plant] = await db
     .select()
     .from(plantsTable)
-    .where(eq(plantsTable.id, plantId));
+    .where(and(eq(plantsTable.id, plantId), eq(plantsTable.gardenId, ctx.gardenId)));
 
   if (!plant) {
     res.status(404).json({ error: "Plant not found" });
     return;
   }
 
-  // Get player stats
-  const [stats] = await db.select().from(playerStatsTable).where(eq(playerStatsTable.id, 1));
+  const [stats] = await db
+    .select()
+    .from(playerStatsTable)
+    .where(eq(playerStatsTable.memberId, ctx.memberId));
   const currentXp = stats?.totalXp ?? 0;
   const currentStreak = stats?.currentStreak ?? 0;
   const longestStreak = stats?.longestStreak ?? 0;
@@ -41,10 +46,8 @@ router.post("/log", async (req, res): Promise<void> => {
 
   let xpAwarded = 0;
   let streakBonus = 0;
-  let noteText: string | null = null;
 
   if (status === "watered") {
-    // Figure out how many days overdue
     const recentLogs = await db
       .select()
       .from(wateringLogTable)
@@ -70,11 +73,9 @@ router.post("/log", async (req, res): Promise<void> => {
 
     xpAwarded = calcWateringXp(daysOverdue);
 
-    // Streak update
     let newStreak = currentStreak;
     const yesterday = new Date(today + "T00:00:00Z");
     yesterday.setUTCDate(yesterday.getUTCDate() - 1);
-    const yesterdayStr = toIsoDate(yesterday);
 
     if (lastActionDate === yesterday.toISOString().slice(0, 10) || lastActionDate === today) {
       newStreak = currentStreak + 1;
@@ -82,7 +83,6 @@ router.post("/log", async (req, res): Promise<void> => {
       newStreak = 1;
     }
 
-    // Streak bonuses
     if (newStreak % 7 === 0) {
       streakBonus = XP_STREAK_7;
     } else if (newStreak % 3 === 0) {
@@ -94,8 +94,8 @@ router.post("/log", async (req, res): Promise<void> => {
     const oldLevelInfo = getLevelInfo(currentXp);
     const newLevelInfo = getLevelInfo(newTotalXp);
     const leveledUp = newLevelInfo.currentLevel > oldLevelInfo.currentLevel;
+    const newLongest = Math.max(longestStreak, newStreak);
 
-    // Insert log
     await db.insert(wateringLogTable).values({
       plantId,
       logDate: today,
@@ -104,8 +104,6 @@ router.post("/log", async (req, res): Promise<void> => {
       xpAwarded: totalXpGained,
     });
 
-    // Update stats
-    const newLongest = Math.max(longestStreak, newStreak);
     await db
       .update(playerStatsTable)
       .set({
@@ -115,10 +113,13 @@ router.post("/log", async (req, res): Promise<void> => {
         longestStreak: newLongest,
         lastActionDate: today,
       })
-      .where(eq(playerStatsTable.id, 1));
+      .where(eq(playerStatsTable.memberId, ctx.memberId));
 
-    const [updatedStats] = await db.select().from(playerStatsTable).where(eq(playerStatsTable.id, 1));
-    const computedPlant = await getComputedPlant(plantId);
+    const [updatedStats] = await db
+      .select()
+      .from(playerStatsTable)
+      .where(eq(playerStatsTable.memberId, ctx.memberId));
+    const computedPlant = await getComputedPlant(plantId, ctx.gardenId);
     const finalLevelInfo = getLevelInfo(updatedStats?.totalXp ?? 0);
 
     res.json({
@@ -137,8 +138,7 @@ router.post("/log", async (req, res): Promise<void> => {
       },
     });
   } else {
-    // postponed
-    noteText = `Shifted — soil moist on ${today}`;
+    const noteText = `Shifted — soil moist on ${today}`;
     xpAwarded = XP_POSTPONE;
 
     const newTotalXp = currentXp + xpAwarded;
@@ -159,11 +159,14 @@ router.post("/log", async (req, res): Promise<void> => {
         currentLevel: newLevelInfo.currentLevel,
         lastActionDate: today,
       })
-      .where(eq(playerStatsTable.id, 1));
+      .where(eq(playerStatsTable.memberId, ctx.memberId));
 
-    const [updatedStats] = await db.select().from(playerStatsTable).where(eq(playerStatsTable.id, 1));
-    const computedPlant = await getComputedPlant(plantId);
-    const finalLevelInfo2 = getLevelInfo(updatedStats?.totalXp ?? 0);
+    const [updatedStats] = await db
+      .select()
+      .from(playerStatsTable)
+      .where(eq(playerStatsTable.memberId, ctx.memberId));
+    const computedPlant = await getComputedPlant(plantId, ctx.gardenId);
+    const finalLevelInfo = getLevelInfo(updatedStats?.totalXp ?? 0);
 
     res.json({
       xpAwarded,
@@ -172,10 +175,10 @@ router.post("/log", async (req, res): Promise<void> => {
       plant: computedPlant,
       stats: {
         totalXp: updatedStats?.totalXp ?? 0,
-        currentLevel: finalLevelInfo2.currentLevel,
-        levelTitle: finalLevelInfo2.levelTitle,
-        xpForCurrentLevel: finalLevelInfo2.xpForCurrentLevel,
-        xpToNextLevel: finalLevelInfo2.xpToNextLevel,
+        currentLevel: finalLevelInfo.currentLevel,
+        levelTitle: finalLevelInfo.levelTitle,
+        xpForCurrentLevel: finalLevelInfo.xpForCurrentLevel,
+        xpToNextLevel: finalLevelInfo.xpToNextLevel,
         currentStreak: updatedStats?.currentStreak ?? 0,
         longestStreak: updatedStats?.longestStreak ?? 0,
       },

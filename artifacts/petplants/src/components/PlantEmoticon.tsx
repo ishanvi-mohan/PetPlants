@@ -139,10 +139,9 @@ export default function PlantEmoticon({ style, state, size = 64 }: PlantEmoticon
       )}
       
       {state === "resting" && (
-        <div className="absolute -top-4 right-0 font-sans font-bold text-white text-xs z-10">
+        <div className="absolute bottom-6 right-0 font-sans font-bold text-white text-xs z-10">
           <div className="animate-zzz-1 absolute bottom-0 right-0">z</div>
-          <div className="animate-zzz-2 absolute bottom-2 right-2 text-sm">Z</div>
-          <div className="animate-zzz-3 absolute bottom-5 right-4 text-base">Z</div>
+          <div className="animate-zzz-2 absolute -bottom-1 right-3 text-sm">Z</div>
         </div>
       )}
       

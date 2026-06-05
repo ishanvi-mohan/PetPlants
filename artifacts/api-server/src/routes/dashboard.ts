@@ -1,8 +1,9 @@
 import { Router, type IRouter } from "express";
 import { db, wateringLogTable, playerStatsTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { getAllComputedPlants } from "../lib/plantHelpers";
 import { getLevelInfo } from "../lib/xp";
+import { getGardenContext } from "../lib/gardenContext";
 
 const router: IRouter = Router();
 
@@ -10,12 +11,13 @@ function toIsoDate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
-router.get("/dashboard", async (_req, res): Promise<void> => {
+router.get("/dashboard", async (req, res): Promise<void> => {
+  const ctx = getGardenContext(req, res);
+  if (!ctx) return;
+
   const today = toIsoDate(new Date());
+  const plants = await getAllComputedPlants(ctx.gardenId);
 
-  const plants = await getAllComputedPlants();
-
-  // Sort: due today first
   plants.sort((a, b) => {
     if (a.dueToday && !b.dueToday) return -1;
     if (!a.dueToday && b.dueToday) return 1;
@@ -24,7 +26,6 @@ router.get("/dashboard", async (_req, res): Promise<void> => {
 
   const plantsDueCount = plants.filter((p) => p.dueToday).length;
 
-  // Plants watered today
   const todayLogs = await db
     .select()
     .from(wateringLogTable)
@@ -35,8 +36,10 @@ router.get("/dashboard", async (_req, res): Promise<void> => {
   );
   const plantsWateredToday = wateredTodayIds.size;
 
-  // Player stats
-  const [stats] = await db.select().from(playerStatsTable).where(eq(playerStatsTable.id, 1));
+  const [stats] = await db
+    .select()
+    .from(playerStatsTable)
+    .where(eq(playerStatsTable.memberId, ctx.memberId));
   const levelInfo = getLevelInfo(stats?.totalXp ?? 0);
 
   res.json({

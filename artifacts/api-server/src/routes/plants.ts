@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, plantsTable, playerStatsTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import {
   CreatePlantBody,
   GetPlantParams,
@@ -15,15 +15,21 @@ import {
   getPlantHistory,
 } from "../lib/plantHelpers";
 import { getLevelInfo, XP_ADD_PLANT } from "../lib/xp";
+import { getGardenContext } from "../lib/gardenContext";
 
 const router: IRouter = Router();
 
-router.get("/plants", async (_req, res): Promise<void> => {
-  const plants = await getAllComputedPlants();
+router.get("/plants", async (req, res): Promise<void> => {
+  const ctx = getGardenContext(req, res);
+  if (!ctx) return;
+  const plants = await getAllComputedPlants(ctx.gardenId);
   res.json(plants);
 });
 
 router.post("/plants", async (req, res): Promise<void> => {
+  const ctx = getGardenContext(req, res);
+  if (!ctx) return;
+
   const parsed = CreatePlantBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -35,6 +41,7 @@ router.post("/plants", async (req, res): Promise<void> => {
   const [plant] = await db
     .insert(plantsTable)
     .values({
+      gardenId: ctx.gardenId,
       name,
       species: species ?? null,
       frequencyDays,
@@ -45,18 +52,23 @@ router.post("/plants", async (req, res): Promise<void> => {
     })
     .returning();
 
-  // Award XP for adding a plant
-  const [stats] = await db.select().from(playerStatsTable).where(eq(playerStatsTable.id, 1));
+  const [stats] = await db
+    .select()
+    .from(playerStatsTable)
+    .where(eq(playerStatsTable.memberId, ctx.memberId));
   const newXp = (stats?.totalXp ?? 0) + XP_ADD_PLANT;
   const newLevelInfo = getLevelInfo(newXp);
 
   await db
     .update(playerStatsTable)
     .set({ totalXp: newXp, currentLevel: newLevelInfo.currentLevel })
-    .where(eq(playerStatsTable.id, 1));
+    .where(eq(playerStatsTable.memberId, ctx.memberId));
 
-  const [updatedStats] = await db.select().from(playerStatsTable).where(eq(playerStatsTable.id, 1));
-  const computedPlant = await getComputedPlant(plant.id);
+  const [updatedStats] = await db
+    .select()
+    .from(playerStatsTable)
+    .where(eq(playerStatsTable.memberId, ctx.memberId));
+  const computedPlant = await getComputedPlant(plant.id, ctx.gardenId);
   const levelInfo = getLevelInfo(updatedStats?.totalXp ?? 0);
 
   res.status(201).json({
@@ -75,22 +87,27 @@ router.post("/plants", async (req, res): Promise<void> => {
 });
 
 router.get("/plants/:id", async (req, res): Promise<void> => {
+  const ctx = getGardenContext(req, res);
+  if (!ctx) return;
+
   const params = GetPlantParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
     return;
   }
 
-  const plant = await getComputedPlant(params.data.id);
+  const plant = await getComputedPlant(params.data.id, ctx.gardenId);
   if (!plant) {
     res.status(404).json({ error: "Plant not found" });
     return;
   }
-
   res.json(plant);
 });
 
 router.put("/plants/:id", async (req, res): Promise<void> => {
+  const ctx = getGardenContext(req, res);
+  if (!ctx) return;
+
   const params = UpdatePlantParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -115,7 +132,7 @@ router.put("/plants/:id", async (req, res): Promise<void> => {
   const [updated] = await db
     .update(plantsTable)
     .set(updateData)
-    .where(eq(plantsTable.id, params.data.id))
+    .where(and(eq(plantsTable.id, params.data.id), eq(plantsTable.gardenId, ctx.gardenId)))
     .returning();
 
   if (!updated) {
@@ -123,11 +140,14 @@ router.put("/plants/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const plant = await getComputedPlant(updated.id);
+  const plant = await getComputedPlant(updated.id, ctx.gardenId);
   res.json(plant);
 });
 
 router.delete("/plants/:id", async (req, res): Promise<void> => {
+  const ctx = getGardenContext(req, res);
+  if (!ctx) return;
+
   const params = DeletePlantParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -136,7 +156,7 @@ router.delete("/plants/:id", async (req, res): Promise<void> => {
 
   const [deleted] = await db
     .delete(plantsTable)
-    .where(eq(plantsTable.id, params.data.id))
+    .where(and(eq(plantsTable.id, params.data.id), eq(plantsTable.gardenId, ctx.gardenId)))
     .returning();
 
   if (!deleted) {
@@ -148,6 +168,9 @@ router.delete("/plants/:id", async (req, res): Promise<void> => {
 });
 
 router.get("/plants/:id/history", async (req, res): Promise<void> => {
+  const ctx = getGardenContext(req, res);
+  if (!ctx) return;
+
   const params = GetPlantHistoryParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -157,7 +180,7 @@ router.get("/plants/:id/history", async (req, res): Promise<void> => {
   const [plant] = await db
     .select()
     .from(plantsTable)
-    .where(eq(plantsTable.id, params.data.id));
+    .where(and(eq(plantsTable.id, params.data.id), eq(plantsTable.gardenId, ctx.gardenId)));
 
   if (!plant) {
     res.status(404).json({ error: "Plant not found" });

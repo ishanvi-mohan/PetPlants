@@ -9,6 +9,8 @@ import PlantsList from "./pages/PlantsList";
 import PlantForm from "./pages/PlantForm";
 import PlantProfile from "./pages/PlantProfile";
 import WateringLog from "./pages/WateringLog";
+import Onboarding from "./pages/Onboarding";
+import { GardenProvider, useGarden } from "./context/GardenContext";
 
 const queryClient = new QueryClient();
 
@@ -28,14 +30,24 @@ function Router() {
   );
 }
 
+function AppContent() {
+  const { session } = useGarden();
+  if (!session) return <Onboarding />;
+  return (
+    <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+      <Router />
+    </WouterRouter>
+  );
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <Router />
-        </WouterRouter>
-        <Toaster />
+        <GardenProvider>
+          <AppContent />
+          <Toaster />
+        </GardenProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

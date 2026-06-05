@@ -1,9 +1,10 @@
-import { pgTable, integer, date } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+import { gardenMembersTable } from "./garden_members";
 
 export const playerStatsTable = pgTable("player_stats", {
-  id: integer("id").primaryKey().default(1),
+  memberId: text("member_id").primaryKey().references(() => gardenMembersTable.id),
   totalXp: integer("total_xp").notNull().default(0),
   currentLevel: integer("current_level").notNull().default(1),
   currentStreak: integer("current_streak").notNull().default(0),
