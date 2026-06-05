@@ -1,9 +1,9 @@
 import { Router, type IRouter } from "express";
 import { db, wateringLogTable, playerStatsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
-import { getAllComputedPlants } from "../lib/plantHelpers";
-import { getLevelInfo } from "../lib/xp";
-import { getGardenContext } from "../lib/gardenContext";
+import { getAllComputedPlants } from "../lib/plantHelpers.js";
+import { getLevelInfo } from "../lib/xp.js";
+import { getGardenContext } from "../lib/gardenContext.js";
 
 const router: IRouter = Router();
 

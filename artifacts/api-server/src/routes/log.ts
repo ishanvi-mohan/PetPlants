@@ -2,9 +2,9 @@ import { Router, type IRouter } from "express";
 import { db, plantsTable, wateringLogTable, playerStatsTable } from "@workspace/db";
 import { eq, desc, and } from "drizzle-orm";
 import { LogWateringBody } from "@workspace/api-zod";
-import { getComputedPlant } from "../lib/plantHelpers";
-import { calcWateringXp, getLevelInfo, XP_POSTPONE, XP_STREAK_3, XP_STREAK_7 } from "../lib/xp";
-import { getGardenContext } from "../lib/gardenContext";
+import { getComputedPlant } from "../lib/plantHelpers.js";
+import { calcWateringXp, getLevelInfo, XP_POSTPONE, XP_STREAK_3, XP_STREAK_7 } from "../lib/xp.js";
+import { getGardenContext } from "../lib/gardenContext.js";
 
 const router: IRouter = Router();
 

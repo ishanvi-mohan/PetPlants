@@ -1,10 +1,10 @@
 import { Router, type IRouter } from "express";
-import healthRouter from "./health";
-import gardensRouter from "./gardens";
-import plantsRouter from "./plants";
-import logRouter from "./log";
-import statsRouter from "./stats";
-import dashboardRouter from "./dashboard";
+import healthRouter from "./health.js";
+import gardensRouter from "./gardens.js";
+import plantsRouter from "./plants.js";
+import logRouter from "./log.js";
+import statsRouter from "./stats.js";
+import dashboardRouter from "./dashboard.js";
 const router: IRouter = Router();
 
 router.use(healthRouter);

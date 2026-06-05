@@ -1,8 +1,8 @@
 import { Router, type IRouter } from "express";
 import { db, playerStatsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
-import { getLevelInfo } from "../lib/xp";
-import { getGardenContext } from "../lib/gardenContext";
+import { getLevelInfo } from "../lib/xp.js";
+import { getGardenContext } from "../lib/gardenContext.js";
 
 const router: IRouter = Router();
 

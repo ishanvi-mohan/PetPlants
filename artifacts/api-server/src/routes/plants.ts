@@ -13,9 +13,9 @@ import {
   getAllComputedPlants,
   getComputedPlant,
   getPlantHistory,
-} from "../lib/plantHelpers";
-import { getLevelInfo, XP_ADD_PLANT } from "../lib/xp";
-import { getGardenContext } from "../lib/gardenContext";
+} from "../lib/plantHelpers.js";
+import { getLevelInfo, XP_ADD_PLANT } from "../lib/xp.js";
+import { getGardenContext } from "../lib/gardenContext.js";
 
 const router: IRouter = Router();
 
