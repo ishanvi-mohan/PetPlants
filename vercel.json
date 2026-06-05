@@ -1,6 +1,6 @@
 {
   "installCommand": "pnpm install",
-  "buildCommand": "pnpm --filter @workspace/petplants build",
+  "buildCommand": "pnpm --filter @workspace/api-server build && pnpm --filter @workspace/petplants build",
   "outputDirectory": "artifacts/petplants/dist/public",
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api" },
