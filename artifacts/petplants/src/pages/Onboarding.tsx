@@ -16,9 +16,11 @@ export default function Onboarding() {
   function getOrCreateDeviceId(): string {
     let id = localStorage.getItem("petplants_device_id");
     if (!id) {
-      id = typeof crypto.randomUUID === "function"
-        ? crypto.randomUUID()
-        : `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+      try {
+        id = crypto.randomUUID();
+      } catch {
+        id = `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+      }
       localStorage.setItem("petplants_device_id", id);
     }
     return id;
