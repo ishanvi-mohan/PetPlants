@@ -35,11 +35,18 @@ router.post("/gardens", async (req, res): Promise<void> => {
   let joinCode = generateJoinCode();
   let attempts = 0;
   while (attempts < 10) {
-    const existing = await db
-      .select()
-      .from(gardensTable)
-      .where(eq(gardensTable.joinCode, joinCode));
-    if (existing.length === 0) break;
+    try {
+      const existing = await db
+        .select()
+        .from(gardensTable)
+        .where(eq(gardensTable.joinCode, joinCode));
+      if (existing.length === 0) break;
+    } catch (err: unknown) {
+      const cause = err instanceof Error ? err : new Error(String(err));
+      console.error("DB error during join code check:", cause.message, (cause as NodeJS.ErrnoException).cause);
+      res.status(500).json({ error: `DB error: ${cause.message}`, cause: String((cause as NodeJS.ErrnoException).cause) });
+      return;
+    }
     joinCode = generateJoinCode();
     attempts++;
   }
