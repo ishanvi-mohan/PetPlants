@@ -95,7 +95,7 @@ export default function Onboarding() {
             style={{ imageRendering: "pixelated" }}
           />
           <h1 className="font-heading text-[#00ff87] text-base mb-2">PetPlants</h1>
-          <p className="font-sans text-[#556080] text-xl">Gamified plant care</p>
+          <p className="font-sans text-[#556080] text-xl">Care together, grow together</p>
         </div>
 
         {/* Pick mode */}
