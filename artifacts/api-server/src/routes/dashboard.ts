@@ -16,7 +16,16 @@ router.get("/dashboard", async (req, res): Promise<void> => {
   if (!ctx) return;
 
   const today = toIsoDate(new Date());
-  const plants = await getAllComputedPlants(ctx.gardenId);
+  let plants;
+  try {
+    plants = await getAllComputedPlants(ctx.gardenId);
+  } catch (err: unknown) {
+    const e = err instanceof Error ? err : new Error(String(err));
+    const cause = (e as NodeJS.ErrnoException).cause;
+    console.error("[dashboard] getAllComputedPlants failed:", e.message, cause ? `cause: ${String(cause)}` : "");
+    res.status(500).json({ error: e.message, cause: String(cause) });
+    return;
+  }
 
   plants.sort((a, b) => {
     if (a.dueToday && !b.dueToday) return -1;

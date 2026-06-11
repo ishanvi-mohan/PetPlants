@@ -16,7 +16,7 @@ if (!process.env.DATABASE_URL) {
 // password to pg and the pooler rejected it ("Tenant or user not found").
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+  ssl: { rejectUnauthorized: false },
 });
 export const db = drizzle(pool, { schema });
 

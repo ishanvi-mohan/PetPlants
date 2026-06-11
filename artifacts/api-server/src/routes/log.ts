@@ -76,17 +76,23 @@ router.post("/log", async (req, res): Promise<void> => {
     let newStreak = currentStreak;
     const yesterday = new Date(today + "T00:00:00Z");
     yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+    const yesterdayStr = yesterday.toISOString().slice(0, 10);
 
-    if (lastActionDate === yesterday.toISOString().slice(0, 10) || lastActionDate === today) {
+    const streakIncremented = lastActionDate === yesterdayStr;
+    if (streakIncremented) {
       newStreak = currentStreak + 1;
     } else if (lastActionDate !== today) {
+      // Streak broken (gap > 1 day, or first time)
       newStreak = 1;
     }
+    // lastActionDate === today: same-day watering, streak stays unchanged
 
-    if (newStreak % 7 === 0) {
-      streakBonus = XP_STREAK_7;
-    } else if (newStreak % 3 === 0) {
-      streakBonus = XP_STREAK_3;
+    if (streakIncremented) {
+      if (newStreak % 7 === 0) {
+        streakBonus = XP_STREAK_7;
+      } else if (newStreak % 3 === 0) {
+        streakBonus = XP_STREAK_3;
+      }
     }
 
     const totalXpGained = xpAwarded + streakBonus;
